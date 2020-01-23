@@ -36,72 +36,78 @@ vector2
 vector3 <- c(TRUE,TRUE,TRUE,FALSE,TRUE,FALSE) #logical vector
 vector3
 
-vector1[3] # 
+vector1[3] # returns 3rd element from vector
 
 # Matrices ----
 matrix1 <- matrix(1:20, nrow = 5,ncol = 4) # 
 matrix1
-matrix2 <- matrix(1:20, nrow = 5, ncol = 4, byrow = TRUE) #
+matrix2 <- matrix(1:20, nrow = 5, ncol = 4, byrow = TRUE) # lists values in order by row rather than by column
 matrix2
 matrix3 <- matrix(1:20, nrow = 5, ncol = 4, byrow = TRUE, # return after comma continues the line
                   dimnames = list(c("uno", "dos", "tres", "cuatro", "cinco"), 
                                   c("un", "deux", "trois", "cat"))) #
 
-matrix1[4, ] #
-matrix1[ , 3] #
-matrix1[c(12, 14)] #
-matrix1[c(12:14)] #
-matrix1[2:4, 1:3] #
+matrix1[4, ] # returns row 4
+matrix1[ , 3] # returns column 3
+matrix1[c(12, 14)] # returns 12th and 14th value
+matrix1[c(12:14)] # returns 12th through 14th value
+matrix1[2:4, 1:3] # returns row 2 through 4 and 1 through 3
 
 cells <- c(1, 26, 24, 68)
 rnames <- c("R1", "R2")
 cnames <- c("C1", "C2") 
 matrix4 <- matrix(cells, nrow = 2, ncol = 2, byrow = TRUE,
   dimnames = list(rnames, cnames)) # 
-matrix4
+matrix4["R1","C2"]
 
 # Lists ---- 
 list1 <- list(name = "Maria", mynumbers = vector1, mymatrix = matrix1, age = 5.3); list1
 list1[[2]]
 
 # Data Frames ----
-d <- c(1, 2, 3, 4) # What type of vector?
-e <- c("red", "white", "red", NA) # What type of vector?
-f <- c(TRUE, TRUE, TRUE, FALSE) # What type of vector?
+d <- c(1, 2, 3, 4) # What type of vector? - Numerical
+e <- c("red", "white", "red", NA) # What type of vector? - Character
+f <- c(TRUE, TRUE, TRUE, FALSE) # What type of vector? - Logical
 dataframe1 <- data.frame(d,e,f) #
 names(dataframe1) <- c("ID","Color","Passed"); View(dataframe1) # 
 
 dataframe1[1:2,] # 
 dataframe1[c("ID","Passed")] # 
 dataframe1$ID
-
+dataframe1[,"ID"]
 ```
 Question: How do the different types of data appear in the Environment tab?
 
-> Answer: 
+> Answer: Vectors appear as "Values" and lists, matrices, and data frames appear as "Data"
 
 Question: In the R chunk below, write "dataframe1$". Press `tab` after you type the dollar sign. What happens?
 
-> Answer: 
+> Answer: You can call up a specific column of the df by name
 
 ### Coding challenge
 
 Find a ten-day forecast of temperatures (Fahrenheit) for Durham, North Carolina. Create two vectors, one representing the high temperature on each of the ten days and one representing the low.
 
 ```{r}
-
+high.temp <- c(62, 45, 50, 50, 40, 40, 45, 52, 54, 58)
+low.temp <- c(31, 29, 43, 24, 23, 23, 26, 30, 42, 41)
 ```
 
 Now, create two additional vectors that include the ten-day forecast for the high and low temperatures in Celsius.
 
 ```{r}
-
+high.temp.c <- (high.temp -32) * 9/5
+low.temp.c <- (low.temp -32) * 9/5
 ```
 
 Combine your four vectors into a data frame and add informative column names.
 
 ```{r}
-
+forecast <- data.frame(high.temp, low.temp, high.temp.c, low.temp.c, 
+                              row.names = list("Today", "Friday", "Saturday", "Sunday",
+                                            "Monday", "Tuesday", "Wednesday", "Thursday",
+                                            "Next Friday", "Next Saturday"))
+names(forecast) <- list("High.F", "Low.F", "High.C", "Low.C")
 ```
 
 Use the common functions `summary` and `sd` to obtain basic data summaries of the ten-day forecast. How would you call these functions differently for the entire data frame vs. a single column? Attempt to demonstrate both options below.
@@ -140,6 +146,7 @@ library(ggplot2)
 # Some packages are umbrellas under which other packages are loaded
 #install.packages("tidyverse")
 library(tidyverse)
+?tibble
 ```
 
 Question: What happens in the console when you load a package?
