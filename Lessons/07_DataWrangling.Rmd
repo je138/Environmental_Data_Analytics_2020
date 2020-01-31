@@ -23,7 +23,7 @@ library(lubridate)
 NTL.phys.data.PeterPaul <- read.csv("./Data/Processed/NTL-LTER_Lake_ChemistryPhysics_PeterPaul_Processed.csv")
 NTL.nutrient.data <- read.csv("./Data/Raw/NTL-LTER_Lake_Nutrients_Raw.csv")
 ```
-
+## Need to load plyr first, then tidyverse (which contains dplyr, which will mask some commands from plyr as they use the same commands)
 ## Review of basic exploration and wrangling
 ```{r}
 # Data summaries for physical data
@@ -45,17 +45,17 @@ dim(NTL.nutrient.data.PeterPaul)
 str(NTL.nutrient.data.PeterPaul)
 summary(NTL.nutrient.data.PeterPaul$lakename) 
 # Notice that other lake names didn't go away, even though they have zero values
-NTL.nutrient.data.PeterPaul <- droplevels(NTL.nutrient.data.PeterPaul)
+NTL.nutrient.data.PeterPaul <- droplevels(NTL.nutrient.data.PeterPaul) # can also attach to the end of the pipe where we filtered
 summary(NTL.nutrient.data.PeterPaul$lakename)
 summary(NTL.nutrient.data.PeterPaul$comments)
 class(NTL.nutrient.data.PeterPaul$sampledate)
-NTL.nutrient.data.PeterPaul$sampledate <- as.Date(NTL.nutrient.data.PeterPaul$sampledate, format = "%m/%d/%y")
+NTL.nutrient.data.PeterPaul$sampledate <- as.Date(NTL.nutrient.data.PeterPaul$sampledate, format = "%m/%d/%y") # specifies the format in which the date comes/is currently in
 
 NTL.nutrient.data.PeterPaul <- 
   NTL.nutrient.data.PeterPaul %>% #
   mutate(month = month(sampledate)) %>% #
   select(lakeid:daynum, month, sampledate:comments) %>% # 
-  drop_na(depth)
+  drop_na(depth) # drop any NAs for the depth column
 
 # Save processed nutrient file
 write.csv(NTL.nutrient.data.PeterPaul, row.names = FALSE, 
@@ -69,7 +69,7 @@ NTL.nutrient.data.PeterPaul.subset <- select(NTL.nutrient.data.PeterPaul,
                                              lakename, year4, daynum, month, sampledate, depth:po4)
 
 # write a more succinct line of code to subset the nutrient dataset. 
-
+NTL.nutrient.data.PeterPaul.subset2 <- NTL.nutrient.data %>% select(-lakeid, -depth_id, -comments)
 ```
 
 
@@ -86,8 +86,8 @@ Note: `tidyr` is moving away from `gather` and `spread` and toward `pivot_longer
 
 ```{r}
 # Gather nutrient data into one column
-NTL.nutrient.data.PeterPaul.gathered <- gather(NTL.nutrient.data.PeterPaul.subset, "nutrient", "concentration", tn_ug:po4)
-NTL.nutrient.data.PeterPaul.gathered <- subset(NTL.nutrient.data.PeterPaul.gathered, !is.na(concentration))
+NTL.nutrient.data.PeterPaul.gathered <- gather(NTL.nutrient.data.PeterPaul.subset, "nutrient", "concentration", tn_ug:po4) # need to supply what new columns will be
+NTL.nutrient.data.PeterPaul.gathered <- subset(NTL.nutrient.data.PeterPaul.gathered, !is.na(concentration)) # removing NAs in concentration column
 count(NTL.nutrient.data.PeterPaul.gathered, nutrient)
 
 write.csv(NTL.nutrient.data.PeterPaul.gathered, row.names = FALSE, 
@@ -98,7 +98,7 @@ NTL.nutrient.data.PeterPaul.spread <- spread(NTL.nutrient.data.PeterPaul.gathere
 
 # Split components of cells into multiple columns
 # Opposite of 'separate' is 'unite'
-NTL.nutrient.data.PeterPaul.dates <- separate(NTL.nutrient.data.PeterPaul.subset, sampledate, c("Y", "m", "d"))
+NTL.nutrient.data.PeterPaul.dates <- separate(NTL.nutrient.data.PeterPaul.subset, sampledate, c("Y", "m", "d")) ## separates y-m-d format and creates new column for each one
 
 # I recommend using lubridate rather than separate and unite.
 
@@ -121,7 +121,7 @@ Let's say we want to generate a new dataset that contains all possible physical 
 
 ```{r}
 
-NTL.phys.nutrient.data.PeterPaul <- full_join(NTL.phys.data.PeterPaul.subset, NTL.nutrient.data.PeterPaul.subset)
+NTL.phys.nutrient.data.PeterPaul <- full_join(NTL.phys.data.PeterPaul.subset, NTL.nutrient.data.PeterPaul.subset) ## joins "horizontally"
 
 write.csv(NTL.phys.nutrient.data.PeterPaul, row.names = FALSE, 
           file ="./Data/Processed/NTL-LTER_Lake_Chemistry_Nutrients_PeterPaul_Processed.csv")
@@ -144,10 +144,10 @@ However, there are 20 months in this dataset, so importing all these files indiv
 
 ```{r}
 LitterFiles = list.files(path = "./Data/Raw/NIWO_Litter/", pattern="*.csv", full.names=TRUE)
-LitterFiles
+LitterFiles ## * means "something"
 
 Litter <- LitterFiles %>%
-  ldply(read.csv)
+  ldply(read.csv) #used for
 ```
 
 We also have information about individual traps, including the location and type of landcover. Let's join these two datasets. Note that "siteID", "plotID" and "trapID" exist in both datasets, and we can join them by these conditions. Notice the dimensions of the final dataset.
@@ -176,7 +176,7 @@ NTL.PeterPaul.summaries <-
   filter(depth == 0) %>%
   group_by(lakename, month) %>%
   filter(!is.na(temperature_C) & !is.na(tn_ug) & !is.na(tp_ug)) %>%
-  summarise(meantemp = mean(temperature_C), 
+  summarise(meantemp = mean(temperature_C), # summarise function from dplyr
             sdtemp = sd(temperature_C), 
             meanTN = mean(tn_ug), 
             sdTN = sd(tn_ug), 
