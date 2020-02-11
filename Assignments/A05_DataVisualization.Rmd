@@ -1,6 +1,6 @@
 ---
 title: "Assignment 5: Data Visualization"
-author: "Student Name"
+author: "Jack Eynon"
 output: pdf_document
 geometry: margin=2.54cm
 editor_options: 
@@ -29,18 +29,34 @@ The completed exercise is due on Tuesday, February 11 at 1:00 pm.
 
 ```{r}
 #1
-
+getwd()
+library(tidyverse)
+library(cowplot)
+lake.chemistry.nutrients <- read.csv("~/Courses/EnvDataAnalytics/Environmental_Data_Analytics_2020/Data/Processed/NTL-LTER_Lake_Chemistry_Nutrients_PeterPaul_Processed.csv")
+lake.nutrients <- read.csv("~/Courses/EnvDataAnalytics/Environmental_Data_Analytics_2020/Data/Processed/NTL-LTER_Lake_Nutrients_PeterPaulGathered_Processed.csv")
+litter <- read.csv("~/Courses/EnvDataAnalytics/Environmental_Data_Analytics_2020/Data/Processed/NEON_NIWO_Litter_mass_trap_Processed.csv")
 
 #2
+class(lake.chemistry.nutrients$sampledate) #factor; must convert to date
+class(lake.nutrients$sampledate) # also factor
+str(litter) ## several date columns, all set as factors (weighdate, setdate, collectdate, date (ignoring ovenstart/end)) in same format
 
+lake.chemistry.nutrients$sampledate <- as.Date(lake.chemistry.nutrients$sampledate, format = "%Y-%m-%d")
+lake.nutrients$sampledate <- as.Date(lake.nutrients$sampledate, format = "%Y-%m-%d")
+litter$weighDate <- as.Date(litter$weighDate, format = "%Y-%m-%d")
+litter$setDate <- as.Date(litter$setDate, format = "%Y-%m-%d")
+litter$collectDate <- as.Date(litter$collectDate, format = "%Y-%m-%d")
+litter$date <- as.Date(litter$date, format = "%Y-%m-%d")
 
 ```
 ## Define your theme
 3. Build a theme and set it as your default theme.
 
 ```{r}
+theme_eynon <- theme_bw(base_size = 12, base_line_size = 1) + 
+  theme(axis.ticks = element_line(color = "black"), axis.text = element_text(color = "darkmagenta"), axis.title.y = element_text(face="bold"), axis.title.x = element_text(face="bold"), plot.background = element_rect( size = 2))
 
-
+theme_set(theme_eynon)
 ```
 
 ## Create graphs
@@ -49,33 +65,70 @@ For numbers 4-7, create ggplot graphs and adjust aesthetics to follow best pract
 4. [NTL-LTER] Plot total phosphorus by phosphate, with separate aesthetics for Peter and Paul lakes. Add a line of best fit and color it black. Adjust your axes to hide extreme values.
 
 ```{r}
+## phosphate = po4, phosphorus = tp_ug
+paul.lake.p04xtp <- ggplot(subset(lake.chemistry.nutrients, lakename=="Paul Lake"), aes(x=tp_ug, y=po4)) + geom_point(alpha = .5, color = "darkmagenta") +
+  labs(x=expression(Phosphorus (mu*g/L)), y = expression(Phosphate)) +
+  theme(axis.title.x = element_text(face="bold", size = 14),
+        axis.title.y = element_text(face="bold", size=14)) +
+  geom_smooth(method = lm, color = "black") +
+  ylim(0,50) + ggtitle("Paul Lake")
 
-
-
+peter.lake.p04xtp <- ggplot(subset(lake.chemistry.nutrients, lakename=="Peter Lake"), aes(x=tp_ug, y=po4)) + geom_point(alpha = .5, color = "green4") +
+  labs(x=expression(Phosphorus (mu*g/L)), y = expression(Phosphate)) +
+  theme(axis.title.x = element_text(face="bold", size = 14),
+        axis.title.y = element_text(face="bold", size=14)) +
+  geom_smooth(method = lm, color = "black") +
+  ylim(0,50) + ggtitle("Peter Lake")
+  
+question4 <- plot_grid(paul.lake.p04xtp, peter.lake.p04xtp, nrow=2)
+print(question4)
 ```
 
 
 5. [NTL-LTER] Make three separate boxplots of (a) temperature, (b) TP, and (c) TN, with month as the x axis and lake as a color aesthetic. Then, create a cowplot that combines the three graphs. Make sure that only one legend is present and that graph axes are aligned.
 
 ```{r}
-
-
+temp.box <- ggplot(data = lake.chemistry.nutrients, aes(x=as.factor(month), y=temperature_C, color = lakename)) +
+  geom_boxplot() +
+  labs(x="Month", y="Temperature (C)") +
+  theme(legend.position = "none")
+tp.box <- ggplot(data = lake.chemistry.nutrients, aes(x=as.factor(month), y=tp_ug, color = lakename)) +
+  geom_boxplot() +
+  labs(x="Month", y=expression(bold(paste(Phosphorus(mu*g)))), color = "Lake") +
+   scale_y_continuous(trans = "log2") ## applied log scale to y-axis
+tn.box <- ggplot(data = lake.chemistry.nutrients, aes(x=as.factor(month), y=tn_ug, color = lakename)) +
+  geom_boxplot() +
+  labs(x="Month", y=expression(bold(paste(Nitrogen(mu*g))))) + 
+  theme(legend.position = "none") +
+   scale_y_continuous(trans = "log2") ## applied log scale to y-axis
+ 
+question5 <- plot_grid(temp.box, tp.box, tn.box, ncol = 1, align = 'v', axis = "lr")
+print(question5)
 ```
 
 Question: What do you observe about the variables of interest over seasons and between lakes? 
 
-> Answer: 
+> Answer: Temperature is predictably higher in the summer months. It is comparatively harder to discern a trend in nutrient levels over the seasons, although it seems both phosphorus and nitrogen concentrations may be slightly higher in the late summer/early fall. Peter lake seems to have higher nutrients loads in than Paul Lake in all seasons.
 
 6. [Niwot Ridge] Plot a subset of the litter dataset by displaying only the "Needles" functional group. Plot the dry mass of needle litter by date and separate by NLCD class with a color aesthetic. (no need to adjust the name of each land use)
 
 7. [Niwot Ridge] Now, plot the same plot but with NLCD classes separated into three facets rather than separated by color. 
 
 ```{r}
+mass.plot.color <- ggplot(subset(litter, functionalGroup == "Needles"), aes(y=dryMass, x=weighDate, color = nlcdClass)) +
+  geom_point() +
+  labs(x = "Weigh Date", y = "Dry Mass (g)", color = "NLCD Class")
+print(mass.plot.color)
 
-
+mass.plot.faceted <- ggplot(subset(litter, functionalGroup == "Needles"), aes(y=dryMass, x=weighDate)) +
+  geom_point() +
+  facet_wrap(vars(nlcdClass)) +
+  labs(x = "Weigh Date", y = "Dry Mass (g)", color = "NLCD Class") +
+  theme(axis.text.x = element_text(angle = 90))
+print(mass.plot.faceted)
 
 ```
 
 Question: Which of these plots (6 vs. 7) do you think is more effective, and why? 
 
-> Answer: 
+> Answer: I think 7, the faceted version, is more effective because the first plot is quite cluttered. With so many points plotted on one graph, it is difficult to get an idea of trends for each NLCD class. Although we might expect to be able to compare NLCD classes more easily when plotting them by color, this advantage is undermined by how busy the plot.
