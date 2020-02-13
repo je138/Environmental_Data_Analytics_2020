@@ -63,50 +63,52 @@ Are Ozone levels below the threshold for "good" AQI index (0-50)?
 ```{r}
 
 summary(EPAair$Ozone)
-EPAair.subsample <- sample_n(EPAair, 5000)
+EPAair.subsample <- sample_n(EPAair, 5000) # shapiro-wilks test can only take up to 5000 samples; taking subsample
 
 # Evaluate assumption of normal distribution
-shapiro.test((EPAair.subsample$Ozone))
+shapiro.test((EPAair.subsample$Ozone)) ## p<.05 means we reject H0 = normal distribution. can't assume normality
 ggplot(EPAair, aes(x = Ozone)) +
-  geom_histogram() 
-qqnorm(EPAair$Ozone); qqline(EPAair$Ozone)
+  geom_histogram() ## right skewed: common in environmental data w/ concentrations, etc.
+qqnorm(EPAair$Ozone); qqline(EPAair$Ozone) ## compares data to normal distribution
 
-O3.onesample <- t.test(EPAair$Ozone, mu = 50, alternative = "less")
+O3.onesample <- t.test(EPAair$Ozone, mu = 50, alternative = "less") ## if don't specify alternative, will perform two-sided test
 O3.onesample
 
 Ozone.plot <- ggplot(EPAair, aes(x = Ozone)) +
-  #geom_density(stat = "count", fill = "gray") +
-  geom_density(fill = "gray") +
+  geom_density(stat = "count", fill = "gray") +
+  #geom_density(fill = "gray") + ## density is essentially a moving average of frequency
   geom_vline(xintercept = 50, color = "#238b45", lty = 2, size = 0.9) +
-  scale_x_continuous(expand = c(0, 0)) + scale_y_continuous(expand = c(0, 0))
+  scale_x_continuous(expand = c(0, 0)) + scale_y_continuous(expand = c(0, 0)) ## specifies that plot will start at origin
 print(Ozone.plot)
 ```
 
 Write a sentence or two about the results of this test. Include both the results of the test and an interpretation that puts the findings in context of the resarch question.
 
-> 
+> We are testing whether ozone levels are below the threshold for a "good" AQI index, or in other words whether the population mean ozone level is below 50. Our null hypothesis is that the population mean ozone level is equal to or greater than 50. Based on a p-value of less than 0.05, we reject the null hypothesis and can conclude with relative certainty that the ozone levels are below the threshold for a "good" AQI index. In fact, we are 95% certain that the population mean ozone level is below 41.13.
+# Kateri's example: EPA ozone measurements for 2018-2019 were significantly lower than 50, the AQI threshold for "good" air quality (t-test; t= -57.98, p< 0.0001)
 
 ### Two-sample t-test
 The two-sample *t* test is used to test the hypothesis that the mean of two samples is equivalent. Unlike the one-sample tests, a two-sample test requires a second assumption that the variance of the two groups is equivalent. Are Ozone levels different between 2018 and 2019?
 
 ```{r}
-shapiro.test(EPAair$Ozone[EPAair$Year == 2018])
+shapiro.test(EPAair$Ozone[EPAair$Year == 2018]) # not well illustrated by normal distribution
 shapiro.test(EPAair$Ozone[EPAair$Year == 2019])
-var.test(EPAair$Ozone ~ EPAair$Year)
+var.test(EPAair$Ozone ~ EPAair$Year) # tilda = "by"; rejection of null hypothesis implies our assumption of equal variance is not met
 
 ggplot(EPAair, aes(x = Ozone, color = as.factor(Year))) +
   geom_freqpoly()
 
 # Format as a t-test
-O3.twosample <- t.test(EPAair$Ozone ~ EPAair$Year)
+O3.twosample <- t.test(EPAair$Ozone ~ EPAair$Year) ## since do not specify alt. hypothesis, will run 2-tailed test
 O3.twosample
 O3.twosample$p.value
 
 # Format as a GLM
 O3.twosample2 <- lm(EPAair$Ozone ~ EPAair$Year)
 summary(O3.twosample2)
-
+## can look at coefficient on year variable to verify difference in avg ozone based on t-test above
 plot(O3.twosample2)
+par(mfrow = c(2,2)) ## changes the way R displays plots
 ```
 
 ### Non-parametric equivalent of t-test: Wilcoxon test
@@ -129,13 +131,24 @@ Create three plots, each with appropriately formatted axes and legends. Choose a
 3. geom_violin of ozone divided by year, with the 0.5 quantile marked as a horizontal line. Add letters representing a significant difference between 2018 and 2019. 
 
 ```{r}
+plot1 <- ggplot(data = EPAair, aes(x=Ozone, fill = as.factor(Year))) +
+  geom_density(alpha = .2)
+print(plot1)
 
+ggplot(data = EPAair, aes(y= Ozone, x= as.factor(Year))) +
+  geom_boxplot() +
+  labs(caption = O3.twosample$p.value) +
+    geom_hline(yintercept = 50, color = "#238b45", lty = 2, size = 0.9)
+
+ggplot(data = EPAair, aes(y = Ozone, x = as.factor(Year))) +
+  geom_violin() +
+  geom_hline(yintercept = 50, color = "#238b45", lty = 2, size = 0.9)
 
 ```
 
 Now, write a summary of your findings, incorporating statistical output, reference to the figure(s), and a contextual interpretation.
 
-> 
+> Based on the density plot by year, we can see that 2019 has a higher frequency of ozone readings around and below 50. Conversely, 2018 has a higher frequency of relatively low ozone readings and ozone readings above 50. Based on the boxplots, it seems that 2019 has a slightly higher median ozone value, and both years have IQRs that are entirely the threshold of 50. Bas
 
 
 
