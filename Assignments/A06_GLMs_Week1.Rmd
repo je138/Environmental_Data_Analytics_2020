@@ -1,6 +1,6 @@
 ---
 title: "Assignment 6: GLMs week 1 (t-test and ANOVA)"
-author: "Student Name"
+author: "Jack Eynon"
 output: pdf_document
 geometry: margin=2.54cm
 editor_options: 
@@ -29,10 +29,15 @@ The completed exercise is due on Tuesday, February 18 at 1:00 pm.
 
 ```{r, message = FALSE}
 #1
-
+getwd()
+library(tidyverse)
+library(cowplot)
+library(agricolae)
+lake.nutrients <- read.csv("~/Courses/EnvDataAnalytics/Environmental_Data_Analytics_2020/Data/Processed/NTL-LTER_Lake_Nutrients_PeterPaul_Processed.csv")
 
 #2
-
+lake.nutrients$sampledate <- as.Date(lake.nutrients$sampledate, format = "%Y-%m-%d")
+head(lake.nutrients$sampledate)
 ```
 
 
@@ -40,8 +45,9 @@ The completed exercise is due on Tuesday, February 18 at 1:00 pm.
 
 3. Wrangle your dataset so that it contains only surface depths and only the years 1993-1996, inclusive. Set month as a factor.
 ```{r}
-
-
+surface.1993to1996 <- lake.nutrients %>% filter(depth==0, year4 %in% c(1993:1996))
+surface.1993to1996$month <- as.factor(surface.1993to1996$month)
+class(surface.1993to1996$month)
 ```
 
 ## Analysis
@@ -50,7 +56,7 @@ Peter Lake was manipulated with additions of nitrogen and phosphorus over the ye
 
 4. Which application of the GLM will you use (t-test, one-way ANOVA, two-way ANOVA with main effects, or two-way ANOVA with interaction effects)? Justify your choice.
 
-> Answer: 
+> Answer: I think a two-way ANOVA with interaction effects would be appropriate because we are interested in the effect of two different categorical variables on a continuous response variable, and there is plausibly an interaction effect between the lake and time of year. e.g. if there's an annual bellyflop competition held in Peter Lake in June that effects the amount of nutrients at the lake's surface.
 
 5. Run your test for TN. Include examination of groupings and consider interaction effects, if relevant.
 
@@ -58,11 +64,31 @@ Peter Lake was manipulated with additions of nitrogen and phosphorus over the ye
 
 ```{r}
 #5
-
-
+shapiro.test(surface.1993to1996$tn_ug) ## note: not well approximated by normal distribution
+tn.ANOVA.2way <- aov(data = surface.1993to1996, tn_ug ~ lakename * month)
+summary(tn.ANOVA.2way)
+TukeyHSD(tn.ANOVA.2way)
+tn.interaction <- with(surface.1993to1996, interaction(lakename, month))
+tn.ANOVA.2way.2 <- aov(data = surface.1993to1996, tn_ug ~ tn.interaction)
+tn.groups <- HSD.test(tn.ANOVA.2way.2, "tn.interaction", group = TRUE)
+tn.groups
+  
+## TN concentrations differ significantly between lakes (ANOVA, F=36.414, p<.0000001).
+#Concentrations don't seem to differ significantly by month, and there is no significant
+#interaction effect.
 #6
-
-
+tp.ANOVA.2way <- aov(data = surface.1993to1996, tp_ug ~ lakename * month)
+summary(tp.ANOVA.2way)
+TukeyHSD(tp.ANOVA.2way)
+tp.interaction <- with(surface.1993to1996, interaction(lakename, month))
+tp.ANOVA.2way.2 <- aov(data = surface.1993to1996, tp_ug ~ tp.interaction)
+tp.groups <- HSD.test(tp.ANOVA.2way.2, "tp.interaction", group = TRUE)
+tp.groups
+## TP concentrations differ significantly between lakes (ANOVA, F=98.914, p<.000000000000001).
+#There is a significant interaction effect between lake and month. Month is not a significant
+#predictor of phosphorus levels. However, phosphorus concentrations differ significantly between
+#certain months on the same lake (i.e. Peter Lake in May and July), based on significant pairwise
+#differences.
 ```
 
 7. Create two plots, with TN (plot 1) or TP (plot 2) as the response variable and month and lake as the predictor variables. Hint: you may use some of the code you used for your visualization assignment. Assign groupings with letters, as determined from your tests. Adjust your axes, aesthetics, and color palettes in accordance with best data visualization practices.
@@ -71,10 +97,45 @@ Peter Lake was manipulated with additions of nitrogen and phosphorus over the ye
 
 ```{r}
 #7
+tn.plot <- ggplot(data = surface.1993to1996, aes(y = tn_ug, x = month, color = lakename)) +
+  geom_boxplot() +
+  labs(x="Month", y=expression(bold(paste(Nitrogen(mu*g)))), color = "Lake") +
+  scale_color_brewer(palette = "Dark2") +
+  stat_summary(geom = "text", fun.y = max, vjust = -.75, size = 3.5,
+               label = c("b","ab","b","ab","b","a","b","a","ab","ab"), position = position_dodge(0.75))
+print(tn.plot)
 
-
+tp.plot <- ggplot(data = surface.1993to1996, aes(y = tp_ug, x = month, color = lakename)) +
+  geom_boxplot() +
+  labs(x="Month", y=expression(bold(paste(Phosphorus(mu*g)))), color = "Lake") +
+  scale_color_brewer(palette = "Dark2") +
+  stat_summary(geom = "text", fun.y = max, vjust = -.75, size = 3.5,
+               label = c("cd","bcd","d","ab","d","a","d","abc","cd","abcd"),
+               position = position_dodge(0.75))
+  print(tp.plot)
 #8
+# adjusting plots
+  tn.cowplot <- ggplot(data = surface.1993to1996, aes(y = tn_ug, x = month, color = lakename)) +
+  geom_boxplot() +
+  labs(x="Month", y=expression(bold(paste(Nitrogen(mu*g)))), color = "Lake") +
+  scale_color_brewer(palette = "Dark2") +
+  stat_summary(geom = "text", fun.y = max, vjust = -.75, size = 3.5,
+               label = c("b","ab","b","ab","b","a","b","a","ab","ab"), position = position_dodge(0.75)) + 
+    ylim(0,2250) +
+    theme(legend.position = "top", axis.title.x = element_blank(), axis.text.x = element_blank())
+  
+  tp.cowplot <- ggplot(data = surface.1993to1996, aes(y = tp_ug, x = month, color = lakename)) +
+  geom_boxplot() +
+  labs(x="Month", y=expression(bold(paste(Phosphorus(mu*g)))), color = "Lake") +
+  scale_color_brewer(palette = "Dark2") +
+  stat_summary(geom = "text", fun.y = max, vjust = -.75, size = 3.5,
+               label = c("cd","bcd","d","ab","d","a","d","abc","cd","abcd"),
+               position = position_dodge(0.75)) +
+    ylim(0,80) +
+    theme(legend.position = "none")
 
+  tn.tp.cowplot <- plot_grid(tn.cowplot, tp.cowplot, ncol = 1, align = 'v', axis = 'lr')
+  print(tn.tp.cowplot)
 ```
 
 

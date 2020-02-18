@@ -17,6 +17,7 @@ editor_options:
 getwd()
 library(tidyverse)
 library(agricolae)
+library(dplyr)
 
 Litter <- read.csv("./Data/Processed/NEON_NIWO_Litter_mass_trap_Processed.csv")
 
@@ -40,7 +41,7 @@ Litter.Totals <- Litter %>%
   group_by(plotID, collectDate, nlcdClass) %>%
   summarise(dryMass = sum(dryMass))
 
-# Test for normality. 
+# Test for normality. If p-value < .05, not well approximated by normal distribution
 # Note: the important assumption for GLMs is normality of residuals, 
 # not necessarily normality of raw data. See below when we plot the model.
 shapiro.test(Litter.Totals$dryMass[Litter.Totals$plotID == "NIWO_040"])
@@ -65,28 +66,29 @@ bartlett.test(Litter.Totals$dryMass ~ Litter.Totals$plotID)
 # Format ANOVA as aov
 Litter.Totals.anova <- aov(data = Litter.Totals, dryMass ~ plotID)
 summary(Litter.Totals.anova)
-
+## Low p-value indicates plotID is a signficant predictor of dry mass
 # Format ANOVA as lm
-Litter.Totals.anova2 <- lm(data = Litter.Totals, dryMass ~ plotID)
+Litter.Totals.anova2 <- lm(data = Litter.Totals, dryMass ~ plotID) #dryMass ~ plotID describes relationship we're testing
 summary(Litter.Totals.anova2)
+## testing if dry mass by plotID is different from the intercept
 
 # Checking model fit and assumptions
 # ANOVA is robust against departures from normality.
 plot(Litter.Totals.anova2)
 
-# Post-hoc test
+# Post-hoc test - can only run on AOV object, not lm object
 TukeyHSD(Litter.Totals.anova)
 
 # Extract groupings for pairwise relationships
 Litter.Totals.groups <- HSD.test(Litter.Totals.anova, "plotID", group = TRUE)
-Litter.Totals.groups
+Litter.Totals.groups ## If in same letter group, then not significantly different
 
 # Graph the results
 Litter.Totals.plot <- ggplot(Litter.Totals, aes(x = plotID, y = dryMass)) +
   geom_boxplot() +
   theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
-  stat_summary(geom = "text", fun.y = max, vjust = -1, size = 3.5,
-               label = c("abc", "ab", "abcd", "bcd", "bcd", "a", 
+  stat_summary(geom = "text", fun.y = max, vjust = -1, size = 3.5, #fun.y = max --> place at max y-value
+               label = c("abc", "ab", "abcd", "bcd", "bcd", "a", # letters in order of plotID
                          "d", "abcd", "cd", "d", "abcd", "abcd")) +
   labs(x = "Plot ID", y = "Dry Mass (g)") +
   ylim(0, 85)
@@ -95,8 +97,8 @@ print(Litter.Totals.plot)
 
 What information does the output give us? How might we report this information in a report?
 
-> 
-
+> Total litter biomass differed significantly among sites at the Niwot Ridge LTER (figure 1; ANOVA, F11,198 = 4.813, p<.000001)
+# F-stat: further away from 0, the more likely that the groups differ significantly
 
 ### Non-parametric equivalent of ANOVA: Kruskal-Wallis Test
 As with the Wilcoxon test, the Kruskal-Wallis test is the non-parametric counterpart to the one-way ANOVA. Here, the data from two or more independent samples are replaced with their ranks without regard to the grouping AND based on the between-group sum of squares calculations. 
@@ -167,5 +169,11 @@ Litter.anova.plot <- ggplot(Litter, aes(y = dryMass, x = nlcdClass, color = func
   geom_boxplot()
 print(Litter.anova.plot)
 
+new.litter.anova.plot <- ggplot(Litter, aes(y = dryMass, x = nlcdClass, color = functionalGroup)) + geom_boxplot() + 
+  stat_summary(geom = "text", fun.y = max, vjust = -1, size = 3.5,
+               label = c("d", "d", "d", "a", "d", "d", "d", "d",
+                         "d", "d", "d", "b", "d", "d", "d", "d",
+                         "d", "d", "cd", "bc", "d", "d", "d", "d"))
+print(new.litter.anova.plot)
 ```
 
