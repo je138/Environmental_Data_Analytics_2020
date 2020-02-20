@@ -19,10 +19,11 @@ getwd()
 library(tidyverse)
 library(lubridate)
 library(viridis)
-#install.packages("nlme")
+install.packages("nlme")
 library(nlme)
-#install.packages("piecewiseSEM")
+install.packages("piecewiseSEM")
 library(piecewiseSEM)
+library(ggplot2)
 
 PeterPaul.chem.nutrients <- read.csv("./Data/Processed/NTL-LTER_Lake_Chemistry_Nutrients_PeterPaul_Processed.csv")
 NTL.chem <- read.csv("./Data/Raw/NTL-LTER_Lake_ChemistryPhysics_Raw.csv")
@@ -53,6 +54,7 @@ summary(TNancova.interaction)
 TNplot <- ggplot(PeterPaul.chem.nutrients, aes(x = depth, y = tn_ug, color = lakename)) + 
   geom_point() + 
   geom_smooth(method = "lm", se = FALSE) +
+  scale_color_manual(values = c("darkblue","lightblue")) +
   xlim(0, 10)
 print(TNplot)
 
@@ -118,7 +120,7 @@ NTL.tempmodel <-
 ggplot(NTL.summertemp, aes(x = year4, y = temperature_C, color = lakename)) +
   geom_point() +
   scale_color_viridis_d() +
-  geom_abline(intercept = -97.72, slope = 0.06) +
+  geom_abline(intercept = -97.72, slope = 0.06) + # providing exact coeffs of the model
   # make it look better
   labs(x = "", y = expression("Temperature " ( degree~C)), color = "") +
   theme(legend.spacing.x = unit(0, "cm"))
