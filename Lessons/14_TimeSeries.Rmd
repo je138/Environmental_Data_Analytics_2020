@@ -184,7 +184,7 @@ In general, detecting a monotonic trend requires a long sequence of data with fe
 
 Adjusting the data may be necessary to fulfill the assumptions of a trend test. These adjustments include **aggregation**, **subsampling**, and **interpolation**. What do each of these mean, and why might we want to use them?
 
-> aggregation: 
+> aggregation: Combining daily/weekly data into monthly, etc. May be useful for data gaps
 
 > subsampling: 
 
@@ -288,7 +288,7 @@ print(EnoDischarge.monthly)
 
 What would we conclude based on these findings? 
 
->
+> Based on our model, we do not observe any trend in the volume of discharge over the years in our time series (Seasonal Mann-Kendall, S = -34, p-value > .08).
  
 If a significant trend was present, we could compute a **Sen's Slope** to quantify that trend (`sens.slope` function in the trend package).
 
