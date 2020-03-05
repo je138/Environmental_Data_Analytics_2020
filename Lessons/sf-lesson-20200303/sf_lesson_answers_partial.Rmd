@@ -556,35 +556,35 @@ Bonus: What are some other spatial operations (or confirmations) that you could 
 ```{r activity.gages.select}
 # select a state, here I'm choosing North Carolina (NC)
 # add your code here
-nc_state_bounds_geom <- southeast_state_bounds %>%
-  filter(NAME == "North Carolina") %>%
+fl_state_bounds_geom <- southeast_state_bounds %>%
+  filter(NAME == "Florida") %>%
   st_geometry()
-  # if I wanted Florida instead, what would I need to do?
+  # Filters only florida and drops tabular data
 
 # check
 # add your code here
-head(nc_state_bounds_geom)
+head(fl_state_bounds_geom)
 
 # select watersheds that intersect with NC bounds
 # add your code here
-nc_basins_nf_seplains <- basins_nf_seplains %>%
-  st_intersection(nc_state_bounds_geom)
+fl_basins_nf_seplains <- basins_nf_seplains %>%
+  st_intersection(fl_state_bounds_geom)
 
 # check
 # add your code here
-head(nc_basins_nf_seplains)
+head(fl_basins_nf_seplains)
 
 # select gages that fall within NC bounds
 # add your code here
-nc_gages <- gages %>%
-  st_intersection(nc_state_bounds_geom)
+fl_gages <- gages %>%
+  st_intersection(fl_state_bounds_geom)
 
 # bonus
 # add your code here
-nc_area <- st_area(nc_state_bounds_geom) # find the area of NC
-nc_centroid <- st_centroid(nc_state_bounds_geom) # find the centroid of the NC
-nc_gages_buffer_100m <- st_buffer(nc_gages, dist = 100) # make a buffer around the stream gages in NC
-not_nc_gages <- st_difference(gages, nc_state_bounds_geom) # find stream gages not in NC
+fl_area <- st_area(fl_state_bounds_geom) # find the area of NC
+fl_centroid <- st_centroid(fl_state_bounds_geom) # find the centroid of the NC
+fl_gages_buffer_100m <- st_buffer(fl_gages, dist = 100) # make a buffer around the stream gages in NC
+not_fl_gages <- st_difference(gages, fl_state_bounds_geom) # find stream gages not in NC
 ```
 
 It's really helpful to actually plot these results before moving forward with your work. That way you an make sure the sf commands are doing what you expect. We'll talk about plotting next...
