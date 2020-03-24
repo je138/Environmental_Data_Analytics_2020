@@ -788,10 +788,10 @@ names(nc_gages_climate)
 # plot WD_SITE for each gage location
 pdf(here("outputs", "nc_gages_by_tabular_data.pdf"), width = 11, height = 8.5)
 ggplot() +
-  geom_sf(data = nc_gages_climate, aes(color = WD_SITE), size = 3) +
+  geom_sf(data = fl_gages_climate, aes(color = WD_SITE), size = 3) +
   scale_color_gradient(low = "white", high = "blue") +
   labs(color = "Gage Avg. Annual # Days with Precipitation") +
-  geom_sf(data = nc_state_bounds_geom, fill = NA) +
+  geom_sf(data = fl_state_bounds_geom, fill = NA) +
   theme_bw()
 dev.off()
 ```

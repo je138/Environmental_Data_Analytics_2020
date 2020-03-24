@@ -1,6 +1,6 @@
 ---
 title: "Assignment 9: Spatial Analysis"
-author: "Student Name"
+author: "Jack Eynon"
 output: pdf_document
 geometry: margin=2.54cm
 editor_options: 
@@ -31,6 +31,60 @@ Here are your three options:
 * Basin boundary layer
 * Gage layer
 * Tabular data (as an aesthetic for one of the layers)
+
+```{r}
+fl_state_bounds_geom <- southeast_state_bounds %>%
+  filter(NAME == "Florida") %>%
+  st_geometry()
+
+fl_gages <- gages %>% st_intersection(fl_state_bounds_geom)
+
+fl_gages_climate <- fl_gages %>% left_join(my_tabular_data_raw, by = "STAID")
+
+fl_basins_nf_seplains <- basins_nf_seplains %>%
+  st_intersection(fl_state_bounds_geom)
+
+fl_bbox <- fl_state_bounds_geom %>%
+  st_buffer(dist = 150000) %>% # this value is very arbitrary just wanting to make a large buffer around geometry
+  st_transform(4326) %>% # WGS84 (for lat and long)
+  st_bbox()
+
+fl_bbox_fix <- c(left = fl_bbox[[1]], bottom = fl_bbox[[2]], right = fl_bbox[[3]], top = fl_bbox[[4]])
+
+fl_basemap <- get_map(fl_bbox_fix, maptype = 'terrain-background', source = 'stamen', zoom = 8)
+st_crs(fl_basemap)
+
+fl_state_bounds_geom_wsg84 <- fl_state_bounds_geom %>%
+  st_transform(4326)
+
+fl_basins_nf_seplains_wsg84 <- fl_basins_nf_seplains %>% st_transform(4326)
+
+fl_gages_climate_wsg84 <- fl_gages_climate %>% st_transform(4326)
+
+pdf(here("outputs", "basemap.test.pdf"), width = 11, height = 8.5)
+ggmap(fl_basemap) +
+  geom_sf(data = fl_state_bounds_geom_wsg84, fill = "lightgray") +
+  geom_sf(data = fl_basins_nf_seplains_wsg84, fill = "pink", alpha = 0.3) +
+  labs(title = "Florida Watersheds and Average Humidity at Gage Sites") +
+  geom_sf(fl_gages_climate_wsg84, mapping = aes(color = RH_SITE), size = 2) +
+  scale_color_gradient(low = "white", high = "blue") +
+  labs(color = "Site average relative humidity (percent) over 30 years (1961-1990)") +
+  theme_bw()
+dev.off()
+
+pdf(here("outputs", "Eynon_A09_Spatial.pdf"), width = 11, height = 8.5)
+ggplot() +
+  geom_sf(data = fl_state_bounds_geom, fill = "lightgray") +
+  geom_sf(data = fl_basins_nf_seplains, fill = "pink", alpha = 0.3) +
+  labs(title = "Florida Watersheds and Average Humidity at Gage Sites") +
+  geom_sf(fl_gages_climate, mapping = aes(color = RH_SITE), size = 2) +
+  scale_color_gradient(low = "white", high = "blue") +
+  labs(color = "Site average relative humidity (percent) over 30 years (1961-1990)") +
+  theme_bw()
+dev.off()
+  
+```
+
 
 3. Create a map of any other spatial data. This could be data from the spatial lesson, data from our other course datasets (e.g., the Litter dataset includes latitude and longitude of trap sites), or another dataset of your choosing.  Your map should include: 
 
