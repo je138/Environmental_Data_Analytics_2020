@@ -25,20 +25,40 @@ editor_options:
     + Chunk options allow for flexibility when the code runs and when the document is knitted
 3. **Text** with formatting options for readability in knitted document
 
+```{r}
+
+```
+
+
 A handy cheat sheet for R markdown can be found [here](https://www.rstudio.com/wp-content/uploads/2015/03/rmarkdown-reference.pdf). Another one can be found [here](https://www.rstudio.com/wp-content/uploads/2015/02/rmarkdown-cheatsheet.pdf).
 
 ## WHY R MARKDOWN?
 
 <Fill in our discussion below with bullet points. Use italics and bold for emphasis (hint: use the cheat sheets to figure out how to make bold and italic text).>
 
+* *Italic*
+* **Bold**
+* 
+
 ## TEXT EDITING CHALLENGE
 
 Create a table below that details the example datasets we have been using in class. The first column should contain the names of the datasets and the second column should include some relevant information about the datasets. (Hint: use the cheat sheets to figure out how to make a table in Rmd)
+
+**Dataset**|**Info**
+-----------|-------------
+NTL-LTER   | InfoA, etc.
+-----------|-------------
+EPA Air    | InfoB, etc.
+-----------|-------------
 
 
 ## R CHUNK EDITING CHALLENGE
 ### Installing packages
 Create an R chunk below that installs the package `knitr`. Instead of commenting out the code, customize the chunk options such that the code is not evaluated (i.e., not run). 
+
+```{r eval=FALSE}
+install.packages("knitr")
+```
 
 
 ### Setup
@@ -48,6 +68,19 @@ Load the NTL-LTER_Lake_Nutrients_Raw dataset, display the head of the dataset, a
 
 Customize the chunk options such that the code is run but is not displayed in the final document.
 
+### Set Up
+```{r message=FALSE}
+getwd()
+library(tidyverse)
+library(knitr)
+mytheme <- theme_classic(base_size = 14) +
+  theme(axis.text = element_text(color = "black"), 
+        legend.position = "top")
+theme_set(mytheme)
+
+NTL.LTER <- read.csv("~/Courses/EnvDataAnalytics/Environmental_Data_Analytics_2020/Data/Raw/NTL-LTER_Lake_Nutrients_Raw.csv")
+```
+
 
 ### Data Exploration, Wrangling, and Visualization
 Create an R chunk below to create a processed dataset do the following operations: 
@@ -55,8 +88,25 @@ Create an R chunk below to create a processed dataset do the following operation
 * Include all columns except lakeid, depth_id, and comments
 * Include only surface samples (depth = 0 m)
 
+```{r}
+library(dplyr)
+NTL.new <- NTL.LTER %>% select(-c(lakeid, depth_id, comments)) %>% filter(depth == 0)
+
+```
+
+
 
 Create a second R chunk to create a summary dataset with the mean, minimum, maximum, and standard deviation of total nitrogen concentrations for each lake. Create a second summary dataset that is identical except that it evaluates total phosphorus. Customize the chunk options such that the code is run but not displayed in the final document. 
+
+```{r}
+library(tidyr)
+summary <- drop_na(NTL.new)
+summary <- summary %>% group_by(lakename) %>% summarise(min = min(tn_ug), max = max(tn_ug), mean = mean(tn_ug), sd = sd(tn_ug))
+
+
+
+```
+
 
 
 Create a third R chunk that uses the function `kable` in the knitr package to display two tables: one for the summary dataframe for total N and one for the summary dataframe of total P. Use the `caption = " "` code within that function to title your tables. Customize the chunk options such that the final table is displayed but not the code used to generate the table. 
